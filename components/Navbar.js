@@ -2,24 +2,42 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Shield,
+  Building2,
+  Wallet,
+  Send,
+  BadgeCheck,
+  ShieldCheck,
+  LogOut
+} from "lucide-react";
 
 const linksByType = {
-  admin: [{ href: "/admin", label: "Admin" }],
-  org: [{ href: "/org", label: "Organization" }],
+  admin: [{ href: "/admin", label: "Admin", icon: Shield }],
+  org: [{ href: "/org", label: "Issuer", icon: Building2 }],
   company: [
-    { href: "/company", label: "Company" },
-    { href: "/company/verify", label: "Verify" }
+    { href: "/company", label: "Subscription", icon: BadgeCheck },
+    { href: "/company/verify", label: "Verify", icon: ShieldCheck }
   ],
   citizen: [
-    { href: "/vault", label: "Vault" },
-    { href: "/vault/share", label: "Share" }
+    { href: "/vault", label: "Vault", icon: Wallet },
+    { href: "/vault/share", label: "Share", icon: Send }
   ]
 };
 
-export default function Navbar() {
+const roleLabel = {
+  admin: "Administrator",
+  org: "Issuing organization",
+  company: "Verifier",
+  citizen: "Citizen"
+};
+
+export default function Navbar({ variant }) {
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const pathname = usePathname();
+  const isLanding = variant === "landing" || pathname === "/";
 
   useEffect(() => {
     let mounted = true;
@@ -46,23 +64,42 @@ export default function Navbar() {
 
   return (
     <nav className="nav">
-      <Link className="brand" href="/">
-        <span className="brandMark">Y</span>
-        <span>Yigda</span>
+      <Link className="brand" href="/" aria-label="Yigda home">
+        <span className="brandMark">
+          <img src="/images/yigda-seal.png" alt="" />
+        </span>
+        <span className="brandText">
+          <span className="brandWord">Yigda</span>
+          <span className="brandWordSub">Authentic Documents</span>
+        </span>
       </Link>
       <div className="navLinks">
-        {links.map((link) => (
-          <Link key={link.href} href={link.href}>
-            {link.label}
-          </Link>
-        ))}
+        {links.map((link) => {
+          const Icon = link.icon;
+          const active = pathname === link.href || pathname?.startsWith(`${link.href}/`);
+          return (
+            <Link key={link.href} href={link.href} className={active ? "active" : undefined}>
+              <Icon size={15} strokeWidth={1.8} />
+              {link.label}
+            </Link>
+          );
+        })}
         {user ? (
           <>
-            <span className="muted">{displayName}</span>
-            <button onClick={logout}>Logout</button>
+            <span className="navIdentity" title={roleLabel[user.type] || "Account"}>
+              <span className="navIdentityDot" />
+              {displayName}
+            </span>
+            <button className="navLogout" onClick={logout} type="button">
+              <LogOut size={14} strokeWidth={1.8} />
+              Sign out
+            </button>
           </>
         ) : (
-          <Link href="/official-login">Official Login</Link>
+          <Link href="/login" className="active">
+            <Wallet size={15} strokeWidth={1.8} />
+            Citizen Login
+          </Link>
         )}
       </div>
     </nav>

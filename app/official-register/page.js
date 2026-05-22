@@ -34,7 +34,11 @@ export default function OfficialRegisterPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Registration failed.");
-      setMessage(tab === "org" ? "Organization submitted for admin approval." : "Company account created. You can log in now.");
+      setMessage(
+        tab === "org"
+          ? "Organization submitted for admin approval."
+          : "Company account created. You can sign in now."
+      );
       window.setTimeout(() => router.push("/official-login"), 1200);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed.");
@@ -57,18 +61,25 @@ export default function OfficialRegisterPage() {
 
   return (
     <main className="authShell">
-      <section className="panel authPanel">
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <span className="brandMark">Y</span>
+      <section className="authPanel" style={{ maxWidth: 540 }}>
+        <div className="authBrand">
+          <span className="brandMark">
+            <img src="/images/yigda-seal.png" alt="" />
+          </span>
+          <span className="brandWord">Yigda</span>
         </div>
-        <h1>Official Register</h1>
-        <p>Organizations wait for approval. Companies can subscribe after login.</p>
+        <h1>Register your institution</h1>
+        <p>Organizations wait for admin approval. Companies can subscribe after sign-in.</p>
 
-        <div className="tabs">
-          <button className={`tab ${tab === "org" ? "active" : ""}`} onClick={() => setTab("org")}>
+        <div className="tabs full" style={{ marginBottom: 20 }}>
+          <button className={`tab ${tab === "org" ? "active" : ""}`} type="button" onClick={() => setTab("org")}>
             Organization
           </button>
-          <button className={`tab ${tab === "company" ? "active" : ""}`} onClick={() => setTab("company")}>
+          <button
+            className={`tab ${tab === "company" ? "active" : ""}`}
+            type="button"
+            onClick={() => setTab("company")}
+          >
             Company
           </button>
         </div>
@@ -77,11 +88,20 @@ export default function OfficialRegisterPage() {
           <form className="form" onSubmit={submitOrg}>
             <label className="label">
               Organization name
-              <input className="input" value={org.name} onChange={(event) => setOrg({ ...org, name: event.target.value })} required />
+              <input
+                className="input"
+                value={org.name}
+                onChange={(event) => setOrg({ ...org, name: event.target.value })}
+                required
+              />
             </label>
             <label className="label">
               Type
-              <select className="select" value={org.type} onChange={(event) => setOrg({ ...org, type: event.target.value })}>
+              <select
+                className="select"
+                value={org.type}
+                onChange={(event) => setOrg({ ...org, type: event.target.value })}
+              >
                 {orgTypes.map((type) => (
                   <option key={type}>{type}</option>
                 ))}
@@ -89,53 +109,111 @@ export default function OfficialRegisterPage() {
             </label>
             <label className="label">
               Country
-              <input className="input" value={org.country} onChange={(event) => setOrg({ ...org, country: event.target.value })} />
+              <input
+                className="input"
+                value={org.country}
+                onChange={(event) => setOrg({ ...org, country: event.target.value })}
+              />
             </label>
             <label className="label">
               Logo
-              <input className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setOrgLogo(event.target.files?.[0] || null)} />
-              <span className="muted">{orgLogo ? orgLogo.name : "Optional PNG, JPG, or WebP up to 2 MB."}</span>
+              <input
+                className="input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => setOrgLogo(event.target.files?.[0] || null)}
+              />
+              <span className="hint">{orgLogo ? orgLogo.name : "Optional PNG, JPG, or WebP up to 2 MB."}</span>
             </label>
             <label className="label">
               Password
-              <input className="input" type="password" minLength={8} value={org.password} onChange={(event) => setOrg({ ...org, password: event.target.value })} required />
+              <input
+                className="input"
+                type="password"
+                minLength={8}
+                value={org.password}
+                onChange={(event) => setOrg({ ...org, password: event.target.value })}
+                required
+              />
             </label>
             <label className="label">
               Confirm password
-              <input className="input" type="password" value={org.confirm} onChange={(event) => setOrg({ ...org, confirm: event.target.value })} required />
+              <input
+                className="input"
+                type="password"
+                value={org.confirm}
+                onChange={(event) => setOrg({ ...org, confirm: event.target.value })}
+                required
+              />
             </label>
-            <button className="button" disabled={busy}>Submit for Approval</button>
+            <button className="button full" disabled={busy}>
+              {busy ? "Submitting…" : "Submit for approval"}
+            </button>
           </form>
         ) : (
           <form className="form" onSubmit={submitCompany}>
             <label className="label">
               Company name
-              <input className="input" value={company.name} onChange={(event) => setCompany({ ...company, name: event.target.value })} required />
+              <input
+                className="input"
+                value={company.name}
+                onChange={(event) => setCompany({ ...company, name: event.target.value })}
+                required
+              />
             </label>
             <label className="label">
               Country
-              <input className="input" value={company.country} onChange={(event) => setCompany({ ...company, country: event.target.value })} />
+              <input
+                className="input"
+                value={company.country}
+                onChange={(event) => setCompany({ ...company, country: event.target.value })}
+              />
             </label>
             <label className="label">
               Logo
-              <input className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setCompanyLogo(event.target.files?.[0] || null)} />
-              <span className="muted">{companyLogo ? companyLogo.name : "Optional PNG, JPG, or WebP up to 2 MB."}</span>
+              <input
+                className="input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => setCompanyLogo(event.target.files?.[0] || null)}
+              />
+              <span className="hint">
+                {companyLogo ? companyLogo.name : "Optional PNG, JPG, or WebP up to 2 MB."}
+              </span>
             </label>
             <label className="label">
               Password
-              <input className="input" type="password" minLength={8} value={company.password} onChange={(event) => setCompany({ ...company, password: event.target.value })} required />
+              <input
+                className="input"
+                type="password"
+                minLength={8}
+                value={company.password}
+                onChange={(event) => setCompany({ ...company, password: event.target.value })}
+                required
+              />
             </label>
             <label className="label">
               Confirm password
-              <input className="input" type="password" value={company.confirm} onChange={(event) => setCompany({ ...company, confirm: event.target.value })} required />
+              <input
+                className="input"
+                type="password"
+                value={company.confirm}
+                onChange={(event) => setCompany({ ...company, confirm: event.target.value })}
+                required
+              />
             </label>
-            <button className="button" disabled={busy}>Create Company Account</button>
+            <button className="button full" disabled={busy}>
+              {busy ? "Creating…" : "Create company account"}
+            </button>
           </form>
         )}
 
         {message && <div className="status ok">{message}</div>}
         {error && <div className="status error">{error}</div>}
-        <p style={{ marginTop: 20 }}>Already registered? <Link href="/official-login">Sign in</Link></p>
+
+        <div className="authFooter">
+          Already registered? <Link href="/official-login">Sign in</Link>
+        </div>
       </section>
     </main>
   );

@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import VerifyResult from "@/components/VerifyResult";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { UploadCloud, FileText, ShieldCheck } from "lucide-react";
 
 export default function CompanyVerifyPage() {
   const [file, setFile] = useState(null);
@@ -65,10 +66,16 @@ export default function CompanyVerifyPage() {
   return (
     <>
       <Navbar />
-      <main className="page" style={{ maxWidth: 760 }}>
-        <h1>Verify a Document</h1>
-        <p className="muted">Upload a PDF. Yigda hashes it and checks the issued record.</p>
-        <form className="panel" onSubmit={verify} style={{ marginTop: 24 }}>
+      <main className="page" style={{ maxWidth: 820 }}>
+        <div className="dashboardHeader">
+          <div>
+            <span className="sectionEyebrow">Verifier</span>
+            <h1>Verify a document</h1>
+            <p>Upload a PDF. Yigda hashes it and matches the fingerprint against the chain registry.</p>
+          </div>
+        </div>
+
+        <form className="panel" onSubmit={verify} style={{ display: "grid", gap: 16 }}>
           <label
             className={`fileDrop ${dragging ? "dragging" : ""}`}
             onDragEnter={(event) => {
@@ -91,12 +98,20 @@ export default function CompanyVerifyPage() {
               style={{ display: "none" }}
               onChange={(event) => acceptPDF(event.target.files?.[0] || null)}
             />
-            <span>{file ? file.name : dragging ? "Drop the PDF here" : "Click to choose a PDF or drag it here"}</span>
+            <span className="fileDropIcon" aria-hidden="true">
+              {file ? <FileText size={28} strokeWidth={1.5} /> : <UploadCloud size={32} strokeWidth={1.5} />}
+            </span>
+            <strong>{file ? file.name : dragging ? "Drop the PDF here" : "Click to choose a PDF, or drag it here"}</strong>
+            <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
+              The PDF is hashed on upload. Only the fingerprint is checked against the chain.
+            </span>
           </label>
-          <button className="button" disabled={!file || busy} style={{ marginTop: 18 }}>
-            {busy ? "Verifying..." : "Verify Document"}
+          <button className="button" disabled={!file || busy}>
+            <ShieldCheck size={15} strokeWidth={1.8} />
+            {busy ? "Verifying…" : "Verify document"}
           </button>
         </form>
+
         {error && <div className="status error">{error}</div>}
         <div style={{ marginTop: 20 }}>
           <VerifyResult result={result} />

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 function shortHash(value) {
   if (!value) return "Pending";
-  return `${value.slice(0, 10)}...${value.slice(-8)}`;
+  return `${value.slice(0, 10)}…${value.slice(-8)}`;
 }
 
 export default function OrgPage() {
@@ -103,7 +103,7 @@ export default function OrgPage() {
       if (!response.ok) throw new Error(data.error || "Document issue failed.");
 
       setMessage(
-        `Document issued. Fingerprint ${data.document.doc_hash} was recorded for CID ${data.document.cid}. Blockchain confirmation will update shortly.`
+        `Document issued. Fingerprint ${data.document.doc_hash} recorded for CID ${data.document.cid}. Chain confirmation will follow.`
       );
       setForm({ cid: "", documentType: "", issueDate: "" });
       setFile(null);
@@ -173,15 +173,16 @@ export default function OrgPage() {
   return (
     <>
       <Navbar />
-      <main className="orgPage">
-        <div className="orgHeader">
+      <main className="page">
+        <div className="dashboardHeader">
           <div className="identityRow">
             <LogoAvatar src={user?.logoUrl} name={user?.name} />
             <div>
-              <h1>Organization Portal</h1>
-              {user && <p>{user.name}</p>}
+              <span className="sectionEyebrow">Issuing portal</span>
+              <h1>{user?.name || "Organization"}</h1>
+              <p>Issue documents to citizen NDI accounts. Every document is hashed and anchored on chain.</p>
               <label className="logoUploader">
-                <span className="orgSecondaryButton">{logoBusy ? "Uploading..." : "Change Logo"}</span>
+                <span className="uploaderButton">{logoBusy ? "Uploading…" : "Change logo"}</span>
                 <input
                   disabled={logoBusy}
                   type="file"
@@ -191,28 +192,43 @@ export default function OrgPage() {
               </label>
             </div>
           </div>
+          <div className="dashboardMeta">
+            <span className="badge green dot">{documentTypes.length} document types</span>
+          </div>
         </div>
 
-        <div className="orgTabs">
-          <button className={tab === "single" ? "active" : ""} onClick={() => setTab("single")}>
-            Issue Single
+        <div className="tabs">
+          <button className={`tab ${tab === "single" ? "active" : ""}`} onClick={() => setTab("single")} type="button">
+            Issue single
           </button>
-          <button className={tab === "bulk" ? "active" : ""} onClick={() => setTab("bulk")}>
-            Bulk Issue (ZIP)
+          <button className={`tab ${tab === "bulk" ? "active" : ""}`} onClick={() => setTab("bulk")} type="button">
+            Bulk issue
           </button>
-          <button className={tab === "issued" ? "active" : ""} onClick={() => setTab("issued")}>
-            Issued Documents
+          <button
+            className={`tab ${tab === "issued" ? "active" : ""}`}
+            onClick={() => setTab("issued")}
+            type="button"
+          >
+            Issued documents
           </button>
         </div>
 
-        {message && <div className="orgStatus ok">{message}</div>}
-        {error && <div className="orgStatus error">{error}</div>}
+        {message && <div className="status ok">{message}</div>}
+        {error && <div className="status error">{error}</div>}
 
         {tab === "single" && (
-          <form className="orgIssuePanel" onSubmit={issueDocument}>
-            <label>
-              Student CID
+          <form className="panel" onSubmit={issueDocument} style={{ display: "grid", gap: 16 }}>
+            <div className="panelHeader" style={{ marginBottom: 4 }}>
+              <div>
+                <h2>Issue a single document</h2>
+                <p>Hash a PDF, anchor it on Sepolia, and deliver it to a citizen's vault.</p>
+              </div>
+            </div>
+
+            <label className="label">
+              Citizen CID
               <input
+                className="input"
                 value={form.cid}
                 onChange={(event) => setForm({ ...form, cid: event.target.value })}
                 placeholder="11001234567"
@@ -220,14 +236,15 @@ export default function OrgPage() {
               />
             </label>
 
-            <label>
-              Document Type
+            <label className="label">
+              Document type
               <select
+                className="select"
                 value={selectedType}
                 onChange={(event) => setForm({ ...form, documentType: event.target.value })}
                 required
               >
-                <option value="">Select type...</option>
+                <option value="">Select type…</option>
                 {documentTypes.map((type) => (
                   <option value={type} key={type}>
                     {type}
@@ -236,9 +253,10 @@ export default function OrgPage() {
               </select>
             </label>
 
-            <label>
-              Issue Date
+            <label className="label">
+              Issue date
               <input
+                className="input"
                 type="date"
                 value={form.issueDate}
                 onChange={(event) => setForm({ ...form, issueDate: event.target.value })}
@@ -246,41 +264,52 @@ export default function OrgPage() {
               />
             </label>
 
-            <label>
-              PDF File
+            <label className="label">
+              PDF file
               <input
+                className="input"
                 key={file ? "file-selected" : "file-empty"}
                 type="file"
                 accept="application/pdf,.pdf"
                 onChange={(event) => setFile(event.target.files?.[0] || null)}
                 required
               />
+              <span className="hint">{file ? file.name : "PDF only. The file is hashed before upload."}</span>
             </label>
 
-            <button className="orgPrimaryButton" disabled={busy || !documentTypes.length}>
-              {busy ? "Issuing..." : "Issue Document"}
+            <button className="button" disabled={busy || !documentTypes.length}>
+              {busy ? "Issuing…" : "Issue document"}
             </button>
 
             {!documentTypes.length && (
-              <p className="orgHint">Admin must assign document types before this organization can issue documents.</p>
+              <p className="muted" style={{ fontSize: "var(--text-sm)" }}>
+                Admin must assign document types before this organization can issue.
+              </p>
             )}
           </form>
         )}
 
         {tab === "bulk" && (
-          <form className="orgIssuePanel" onSubmit={issueBulk}>
-            <p className="orgHint">
-              Put PDF files inside a ZIP. Each PDF filename must be the citizen CID, for example <code>11001234567.pdf</code>.
-            </p>
+          <form className="panel" onSubmit={issueBulk} style={{ display: "grid", gap: 16 }}>
+            <div className="panelHeader" style={{ marginBottom: 4 }}>
+              <div>
+                <h2>Bulk issue from a ZIP</h2>
+                <p>
+                  Put PDFs inside a single ZIP. Each filename must be the citizen CID, e.g.{" "}
+                  <code>11001234567.pdf</code>.
+                </p>
+              </div>
+            </div>
 
-            <label>
-              Document Type
+            <label className="label">
+              Document type
               <select
+                className="select"
                 value={selectedBulkType}
                 onChange={(event) => setBulkForm({ ...bulkForm, documentType: event.target.value })}
                 required
               >
-                <option value="">Select type...</option>
+                <option value="">Select type…</option>
                 {documentTypes.map((type) => (
                   <option value={type} key={type}>
                     {type}
@@ -289,9 +318,10 @@ export default function OrgPage() {
               </select>
             </label>
 
-            <label>
-              Issue Date
+            <label className="label">
+              Issue date
               <input
+                className="input"
                 type="date"
                 value={bulkForm.issueDate}
                 onChange={(event) => setBulkForm({ ...bulkForm, issueDate: event.target.value })}
@@ -299,32 +329,38 @@ export default function OrgPage() {
               />
             </label>
 
-            <label>
-              ZIP File
+            <label className="label">
+              ZIP file
               <input
+                className="input"
                 type="file"
                 accept=".zip,application/zip,application/x-zip-compressed"
                 onChange={(event) => setBulkFile(event.target.files?.[0] || null)}
                 required
               />
+              <span className="hint">{bulkFile ? bulkFile.name : "ZIP archive with named PDFs."}</span>
             </label>
 
-            <button className="orgPrimaryButton" disabled={busy || !documentTypes.length}>
-              {busy ? "Processing ZIP..." : "Bulk Issue Documents"}
+            <button className="button" disabled={busy || !documentTypes.length}>
+              {busy ? "Processing ZIP…" : "Bulk issue documents"}
             </button>
 
             {bulkResults && (
-              <div className="orgBulkResults">
+              <div className="panel compact" style={{ background: "var(--surface-sunken)" }}>
                 <strong>Results</strong>
-                <p>{bulkResults.success.length} issued successfully</p>
+                <p style={{ color: "var(--ink-muted)", marginTop: 6 }}>
+                  {bulkResults.success.length} issued successfully.
+                </p>
                 {bulkResults.errors.length > 0 && (
-                  <div>
-                    <p>{bulkResults.errors.length} errors</p>
-                    {bulkResults.errors.map((item, index) => (
-                      <p key={`${item.file}-${index}`}>
-                        <code>{item.file}</code>: {item.reason}
-                      </p>
-                    ))}
+                  <div style={{ marginTop: 8 }}>
+                    <p className="muted">{bulkResults.errors.length} errors:</p>
+                    <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
+                      {bulkResults.errors.map((item, index) => (
+                        <li key={`${item.file}-${index}`} style={{ fontSize: "var(--text-sm)" }}>
+                          <code>{item.file}</code> — {item.reason}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>
@@ -333,36 +369,57 @@ export default function OrgPage() {
         )}
 
         {tab === "issued" && (
-          <section className="orgIssuedPanel">
+          <section className="panel">
+            <div className="panelHeader">
+              <div>
+                <h2>Issued documents</h2>
+                <p>Every document this organization has issued, with chain status.</p>
+              </div>
+              <span className="badge neutral">{issuedDocs.length}</span>
+            </div>
             {issuedDocs.length === 0 ? (
-              <div className="orgEmpty">
+              <div className="empty">
+                <span className="emptyMark">
+                  <img src="/images/yigda-seal.png" alt="" />
+                </span>
                 <h2>No documents issued yet</h2>
-                <p>Issued documents will appear here with their fingerprint and blockchain transaction status.</p>
+                <p>Issued documents will appear here with their fingerprint and Sepolia transaction status.</p>
               </div>
             ) : (
-              issuedDocs.map((doc) => (
-                <article className="orgDocRow" key={doc.id}>
-                  <div>
-                    <div className="orgDocTitle">
-                      <strong>{doc.document_type}</strong>
-                      <span className={doc.status === "active" ? "orgBadge green" : "orgBadge red"}>{doc.status}</span>
+              <div className="tableList">
+                {issuedDocs.map((doc) => (
+                  <article className="listItem" key={doc.id}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+                        <strong>{doc.document_type}</strong>
+                        <span className={`badge ${doc.status === "active" ? "green" : "red"} dot`}>
+                          {doc.status}
+                        </span>
+                      </div>
+                      <p>
+                        CID <code>{doc.cid}</code> · Issued {new Date(doc.issue_date).toLocaleDateString()}
+                      </p>
+                      <p>
+                        Fingerprint <code>{shortHash(doc.doc_hash)}</code>
+                      </p>
+                      <p>
+                        Chain{" "}
+                        <code>{doc.tx_hash ? shortHash(doc.tx_hash) : "Pending Sepolia confirmation"}</code>
+                      </p>
                     </div>
-                    <p>CID: {doc.cid} · Issued {new Date(doc.issue_date).toLocaleDateString()}</p>
-                    <p>Fingerprint: <code>{shortHash(doc.doc_hash)}</code></p>
-                    <p>Blockchain: <code>{doc.tx_hash ? shortHash(doc.tx_hash) : "Pending Sepolia confirmation"}</code></p>
-                  </div>
-                  <div className="orgDocActions">
-                    <a className="orgSecondaryButton" href={`/api/documents/${doc.id}/download`}>
-                      Download PDF
-                    </a>
-                    {doc.status === "active" && (
-                      <button className="orgDangerButton" onClick={() => setRevokeTarget(doc)}>
-                        Revoke
-                      </button>
-                    )}
-                  </div>
-                </article>
-              ))
+                    <div className="listActions">
+                      <a className="button secondary" href={`/api/documents/${doc.id}/download`}>
+                        Download
+                      </a>
+                      {doc.status === "active" && (
+                        <button className="button danger" onClick={() => setRevokeTarget(doc)} type="button">
+                          Revoke
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
             )}
           </section>
         )}
@@ -372,7 +429,9 @@ export default function OrgPage() {
         <div className="modalBackdrop">
           <div className="modal">
             <h2>Revoke {revokeTarget.document_type}</h2>
-            <p className="muted">This marks the document as revoked immediately and sends a revocation transaction in the background.</p>
+            <p className="muted">
+              This marks the document as revoked immediately and sends a revocation transaction in the background.
+            </p>
             <label className="label" style={{ marginTop: 16 }}>
               Reason
               <textarea
@@ -382,11 +441,11 @@ export default function OrgPage() {
                 placeholder="Reason for revocation"
               />
             </label>
-            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-              <button className="button danger" disabled={busy} onClick={revokeDocument}>
+            <div className="buttonRow" style={{ marginTop: 16 }}>
+              <button className="button danger" disabled={busy} onClick={revokeDocument} type="button">
                 Revoke
               </button>
-              <button className="button secondary" onClick={() => setRevokeTarget(null)}>
+              <button className="button secondary" onClick={() => setRevokeTarget(null)} type="button">
                 Cancel
               </button>
             </div>

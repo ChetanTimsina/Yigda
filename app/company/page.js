@@ -27,7 +27,7 @@ function CompanyContent() {
       setUser(me.user);
 
       if (checkoutStatus === "success" && checkoutSessionId) {
-        setCheckoutMessage("Confirming your Stripe payment...");
+        setCheckoutMessage("Confirming your Stripe payment…");
         const syncResponse = await fetch("/api/stripe/sync-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -45,7 +45,8 @@ function CompanyContent() {
       const data = await fetch("/api/company/subscription").then((response) => response.json());
       setSubscription(data.subscription);
       setPlans(data.plans || []);
-      const isActive = data.subscription?.status === "active" && new Date(data.subscription.end_date) > new Date();
+      const isActive =
+        data.subscription?.status === "active" && new Date(data.subscription.end_date) > new Date();
       setShowPlans(!isActive);
     }
     load();
@@ -91,6 +92,9 @@ function CompanyContent() {
   }
 
   const active = subscription?.status === "active" && new Date(subscription.end_date) > new Date();
+  const used = subscription?.verifications_used ?? 0;
+  const limit = subscription?.verifications_limit;
+  const usagePct = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
 
   return (
     <>
@@ -100,10 +104,11 @@ function CompanyContent() {
           <div className="identityRow">
             <LogoAvatar src={user?.logoUrl} name={user?.name} />
             <div>
-              <h1>Company Verifier Dashboard</h1>
-              <p className="muted">Subscribe before verifying uploaded PDFs or opening citizen share links.</p>
+              <span className="sectionEyebrow">Verifier portal</span>
+              <h1>{user?.name || "Company"}</h1>
+              <p>Subscribe before verifying uploaded PDFs or opening citizen share links.</p>
               <label className="logoUploader">
-                <span className="button secondary">{logoBusy ? "Uploading..." : "Change Logo"}</span>
+                <span className="uploaderButton">{logoBusy ? "Uploading…" : "Change logo"}</span>
                 <input
                   disabled={logoBusy}
                   type="file"
@@ -113,7 +118,11 @@ function CompanyContent() {
               </label>
             </div>
           </div>
-          {user && <span className="badge green">{user.name}</span>}
+          <div className="dashboardMeta">
+            <span className={`badge ${active ? "green" : "red"} dot`}>
+              {active ? "Subscription active" : "No active subscription"}
+            </span>
+          </div>
         </div>
 
         {checkoutStatus === "cancelled" && <div className="status error">Stripe checkout was cancelled.</div>}
@@ -121,43 +130,98 @@ function CompanyContent() {
         {error && <div className="status error">{error}</div>}
 
         <section className="panel" style={{ marginBottom: 24 }}>
-          <h2>Subscription Status</h2>
-          {active ? (
-            <p>
-              Active {subscription.plan} plan. Used {subscription.verifications_used} / {subscription.verifications_limit || "unlimited"} verifications.
-            </p>
-          ) : (
-            <p>No active subscription. Verification is locked until a paid plan is active.</p>
-          )}
-          <div style={{ marginTop: 16 }}>
-            <Link className={`button ${active ? "" : "secondary"}`} href="/company/verify">
-              Verify a Document
+          <div className="panelHeader">
+            <div>
+              <h2>Subscription</h2>
+              <p>
+                {active
+                  ? `Active ${subscription.plan} plan. Verifications are billed per document.`
+                  : "Verification is locked until a paid plan is active."}
+              </p>
+            </div>
+            <Link className="button" href="/company/verify">
+              Verify a document
             </Link>
-            {active && (
-              <button className="button secondary" onClick={() => setShowPlans((visible) => !visible)} style={{ marginLeft: 10 }}>
-                {showPlans ? "Hide Plans" : "Upgrade Plans"}
-              </button>
-            )}
           </div>
+
+          {active && (
+            <div style={{ marginTop: 18 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: "var(--text-sm)",
+                  color: "var(--ink-muted)",
+                  fontWeight: 500
+                }}
+              >
+                <span>
+                  Verifications used: <strong style={{ color: "var(--ink-strong)" }}>{used}</strong> /{" "}
+                  {limit || "unlimited"}
+                </span>
+                {limit ? <span>{usagePct}%</span> : null}
+              </div>
+              {limit ? (
+                <div className="downloadTrack" style={{ marginTop: 8, height: 8 }}>
+                  <span
+                    style={{
+                      background: "var(--jade)",
+                      display: "block",
+                      height: "100%",
+                      width: `${usagePct}%`,
+                      borderRadius: "inherit"
+                    }}
+                  />
+                </div>
+              ) : null}
+              <div className="buttonRow" style={{ marginTop: 18 }}>
+                <button className="button secondary" onClick={() => setShowPlans((visible) => !visible)} type="button">
+                  {showPlans ? "Hide plans" : "Upgrade plan"}
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         {showPlans && (
-          <div className="grid three">
-            {plans.map((plan) => (
-              <section className="card" key={plan.id} style={{ borderColor: plan.popular ? "var(--green)" : "var(--line)" }}>
-                {plan.popular && <span className="badge gold">Most Popular</span>}
-                <h2>{plan.name}</h2>
-                <p style={{ fontSize: 30, color: "var(--ink)", fontWeight: 800 }}>{plan.price}<span style={{ fontSize: 15, color: "var(--muted)" }}>/month</span></p>
-                <p>{plan.limit ? `${plan.limit} verifications/month` : "Unlimited verifications"}</p>
-                <ul className="muted" style={{ lineHeight: 1.8, paddingLeft: 18 }}>
-                  {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
-                </ul>
-                <button className="button" disabled={busy === plan.id} onClick={() => subscribe(plan.id)}>
-                  {busy === plan.id ? "Redirecting..." : active ? "Upgrade" : "Subscribe"}
-                </button>
-              </section>
-            ))}
-          </div>
+          <>
+            <div style={{ marginBottom: 14 }}>
+              <span className="sectionEyebrow">Choose a plan</span>
+              <h2 className="sectionTitle">Pay only for what you verify.</h2>
+            </div>
+            <div className="grid three">
+              {plans.map((plan) => (
+                <section className={`planCard ${plan.popular ? "popular" : ""}`} key={plan.id}>
+                  {plan.popular && (
+                    <span className="badge gold" style={{ position: "absolute", right: 16, top: 16 }}>
+                      Most popular
+                    </span>
+                  )}
+                  <h3>{plan.name}</h3>
+                  <div className="planPrice">
+                    {plan.price}
+                    <span>/month</span>
+                  </div>
+                  <p className="muted">
+                    {plan.limit ? `${plan.limit} verifications per month` : "Unlimited verifications"}
+                  </p>
+                  <ul className="planFeatures">
+                    {plan.features.map((feature) => (
+                      <li key={feature}>{feature}</li>
+                    ))}
+                  </ul>
+                  <button
+                    className={`button ${plan.popular ? "" : "secondary"} full`}
+                    disabled={busy === plan.id}
+                    onClick={() => subscribe(plan.id)}
+                    type="button"
+                  >
+                    {busy === plan.id ? "Redirecting…" : active ? "Switch plan" : "Subscribe"}
+                  </button>
+                </section>
+              ))}
+            </div>
+          </>
         )}
       </main>
     </>

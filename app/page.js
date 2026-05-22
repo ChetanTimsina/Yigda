@@ -1,61 +1,139 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import {
+  ArrowRight,
+  Wallet,
+  Settings2,
+  KeyRound,
+  FileSignature,
+  Send,
+  Stamp
+} from "lucide-react";
+
+const steps = [
+  {
+    n: "01",
+    icon: FileSignature,
+    name: "Issue",
+    text: "Approved organizations upload a PDF. Yigda hashes it and writes the fingerprint to a public chain."
+  },
+  {
+    n: "02",
+    icon: Wallet,
+    name: "Hold",
+    text: "The document lands in the citizen's NDI-verified vault. No PDFs leave the platform without consent."
+  },
+  {
+    n: "03",
+    icon: Send,
+    name: "Share",
+    text: "Citizens generate scoped, expiring links for a specific verifier company — no broad sharing."
+  },
+  {
+    n: "04",
+    icon: Stamp,
+    name: "Verify",
+    text: "Subscribed companies upload a PDF or open a share link. The chain confirms authenticity in one click."
+  }
+];
+
+const roles = [
+  {
+    href: "/login",
+    icon: Wallet,
+    eyebrow: "For citizens",
+    title: "Sign in with Bhutan NDI",
+    body: "Open your document vault, download credentials, and create scoped share links for verifiers.",
+    cta: "Continue with NDI",
+    primary: true
+  },
+  {
+    href: "/official-login",
+    icon: KeyRound,
+    eyebrow: "For institutions",
+    title: "Official sign-in",
+    body: "Administrators, approved issuing organizations, and verifier companies sign in here.",
+    cta: "Sign in",
+    primary: false
+  }
+];
 
 export default function HomePage() {
   return (
     <>
-      <Navbar />
+      <Navbar variant="landing" />
       <main className="page">
-        <section className="hero">
-          <div>
-            <span className="badge gold">Blockchain-backed document trust</span>
-            <h1>Official Documents, Verified Without Guesswork</h1>
-            <p>
-              Yigda lets approved organizations issue tamper-resistant PDF documents, citizens keep them in a
-              secure vault, and subscribed companies verify authenticity through one platform.
+        <header className="landingHeader">
+          <div className="landingHeaderText">
+            <span className="sectionEyebrow">Bhutan · Verifiable credentials</span>
+            <h1 className="landingTitle">A trusted ledger for official documents.</h1>
+            <p className="landingLede">
+              Yigda lets approved institutions issue tamper-evident PDF documents, citizens hold them privately,
+              and authorized companies verify authenticity in seconds — anchored to a public blockchain.
             </p>
-            <div className="heroActions">
-              <Link className="button" href="/login">
-                Login with NDI
-              </Link>
-              <Link className="button secondary" href="/official-login">
-                Official Login
-              </Link>
-            </div>
+            <ul className="landingProofRow">
+              <li>
+                <img className="proofIcon" src="/images/ethereum.png" alt="" />
+                Anchored on Sepolia
+              </li>
+              <li>
+                <img className="proofIcon ndi" src="/images/ndi-logo.png" alt="" />
+                Identity by Bhutan NDI
+              </li>
+              <li>
+                <Settings2 size={16} strokeWidth={1.8} />
+                Admin-curated issuer registry
+              </li>
+            </ul>
           </div>
-          <div className="visualPanel" aria-hidden="true">
-            <div className="documentPreview">
-              <span className="seal">Y</span>
-              <h2 style={{ marginTop: 24 }}>Verified Certificate</h2>
-              <p className="muted">Issued by an approved organization</p>
-              <div className="hashLine" style={{ width: "92%" }} />
-              <div className="hashLine" style={{ width: "72%" }} />
-              <div className="hashLine" style={{ width: "84%" }} />
-              <div style={{ display: "grid", gap: 10, marginTop: 34 }}>
-                <span className="badge green">Cloudinary PDF stored</span>
-                <span className="badge green">Sepolia hash anchored</span>
-                <span className="badge green">Same-origin download proxy</span>
-              </div>
-            </div>
+          <div className="landingHeaderMark" aria-hidden="true">
+            <img src="/images/yigda-seal.png" alt="" />
           </div>
+        </header>
+
+        <section className="roleSplit">
+          {roles.map((role) => {
+            const Icon = role.icon;
+            return (
+              <Link key={role.href} href={role.href} className={`roleEntry ${role.primary ? "primary" : ""}`}>
+                <div className="roleEntryHead">
+                  <span className="roleEntryIcon">
+                    <Icon size={20} strokeWidth={1.8} />
+                  </span>
+                  <span className="roleEntryEyebrow">{role.eyebrow}</span>
+                </div>
+                <h2 className="roleEntryTitle">{role.title}</h2>
+                <p>{role.body}</p>
+                <span className="roleEntryCta">
+                  {role.cta}
+                  <ArrowRight size={16} strokeWidth={2} />
+                </span>
+              </Link>
+            );
+          })}
         </section>
 
-        <section className="features">
-          <div className="card">
-            <h3>Admin</h3>
-            <p>Approves organizations, assigns document types, and manages verifier companies.</p>
+        <section className="howSection">
+          <div className="howHeader">
+            <span className="sectionEyebrow">How Yigda works</span>
+            <h2 className="sectionTitle">Issue, hold, share, verify.</h2>
           </div>
-          <div className="card">
-            <h3>Organizations</h3>
-            <p>Register first, wait for approval, then issue only the document types granted by admin.</p>
-          </div>
-          <div className="card">
-            <h3>Citizens</h3>
-            <p>Use Bhutan NDI login to access a private document vault and share selected documents.</p>
-          </div>
-          <div className="card">
-            <h3>Companies</h3>
-            <p>Subscribe before verifying PDFs or opening citizen share links. No free verification tier.</p>
+          <div className="stepGrid">
+            {steps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <article className="stepCell" key={step.n}>
+                  <div className="stepCellHead">
+                    <span className="stepIcon">
+                      <Icon size={18} strokeWidth={1.8} />
+                    </span>
+                    <span className="stepNumber">{step.n}</span>
+                  </div>
+                  <h3 className="stepName">{step.name}</h3>
+                  <p>{step.text}</p>
+                </article>
+              );
+            })}
           </div>
         </section>
       </main>

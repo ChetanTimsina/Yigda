@@ -14,6 +14,11 @@ function resultFor(results, documentId) {
   return results?.documents?.find((document) => document.id === documentId) || null;
 }
 
+function shortHash(value) {
+  if (!value) return "Pending";
+  return `${value.slice(0, 10)}…${value.slice(-8)}`;
+}
+
 export default function SharedDocumentsPage() {
   const { token } = useParams();
   const [status, setStatus] = useState("loading");
@@ -72,33 +77,52 @@ export default function SharedDocumentsPage() {
   return (
     <>
       <Navbar />
-      <main className="page" style={{ maxWidth: 900 }}>
-        {status === "loading" && <section className="panel">Loading shared documents...</section>}
+      <main className="page" style={{ maxWidth: 980 }}>
+        {status === "loading" && (
+          <section className="panel">
+            <span className="skeleton" style={{ height: 24, width: 240 }} />
+            <span className="skeleton" style={{ height: 14, width: 320, marginTop: 12 }} />
+            <span className="skeleton" style={{ height: 14, width: 280, marginTop: 8 }} />
+          </section>
+        )}
 
         {status === "login" && (
           <section className="panel">
-            <h1>Company Login Required</h1>
-            <p>Only subscribed verifier companies can open shared document links.</p>
-            <button className="button" onClick={() => router.push("/official-login")} style={{ marginTop: 16 }}>
-              Official Login
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 500 }}>
+              Company sign-in required
+            </h1>
+            <p style={{ color: "var(--ink-muted)", marginTop: 8 }}>
+              Only subscribed verifier companies can open shared document links.
+            </p>
+            <button
+              className="button"
+              onClick={() => router.push("/official-login")}
+              style={{ marginTop: 18 }}
+              type="button"
+            >
+              Official sign-in
             </button>
           </section>
         )}
 
         {status === "subscription" && (
           <section className="panel">
-            <h1>Subscription Required</h1>
-            <p>{error}</p>
-            <button className="button" onClick={() => router.push("/company")} style={{ marginTop: 16 }}>
-              View Plans
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 500 }}>
+              Subscription required
+            </h1>
+            <p style={{ color: "var(--ink-muted)", marginTop: 8 }}>{error}</p>
+            <button className="button" onClick={() => router.push("/company")} style={{ marginTop: 18 }} type="button">
+              View plans
             </button>
           </section>
         )}
 
         {status === "error" && (
           <section className="panel">
-            <h1>Share Link Unavailable</h1>
-            <p>{error}</p>
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 500 }}>
+              Share link unavailable
+            </h1>
+            <p style={{ color: "var(--ink-muted)", marginTop: 8 }}>{error}</p>
           </section>
         )}
 
@@ -106,36 +130,69 @@ export default function SharedDocumentsPage() {
           <>
             <div className="dashboardHeader">
               <div>
-                <h1>Shared Documents</h1>
-                <p className="muted">
-                  Review the shared documents first. Credits are used only after verification.
+                <span className="sectionEyebrow">Shared with you</span>
+                <h1>Documents to verify</h1>
+                <p>
+                  Review the shared documents first. Credits are consumed only after you confirm verification.
                 </p>
               </div>
-              <span className="badge green">{documents.length} shared</span>
+              <div className="dashboardMeta">
+                <span className="badge neutral">{documents.length} shared</span>
+              </div>
             </div>
 
-            <div className="grid two" style={{ marginTop: 24 }}>
+            <div className="grid two">
               {documents.map((document) => {
                 const result = resultFor(verification, document.id);
                 return (
-                  <article className="card" key={document.id}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                      <span className={`badge ${document.status === "active" ? "green" : "red"}`}>
+                  <article className="docCard" key={document.id}>
+                    <div className="docCardHeader">
+                      <div>
+                        <span className="documentLabel">{document.org_name || "Issuing organization"}</span>
+                        <h3 className="docCardTitle">{document.document_type}</h3>
+                      </div>
+                      <span className={`badge ${document.status === "active" ? "green" : "red"} dot`}>
                         {document.status}
                       </span>
-                      {result && <span className={`badge ${statusClass(result.status)}`}>{result.status}</span>}
                     </div>
-                    <h2>{document.document_type}</h2>
-                    <p>{document.org_name || "Issuing organization"}</p>
-                    <p>Issued {new Date(document.issue_date).toLocaleDateString()}</p>
-                    <p>CID {document.cid}</p>
-                    <p style={{ wordBreak: "break-all" }}>Fingerprint: {document.doc_hash}</p>
-                    <p style={{ wordBreak: "break-all" }}>Tx: {document.tx_hash || "Pending chain confirmation"}</p>
+
+                    <dl className="documentMeta">
+                      <div>
+                        <dt>Recipient</dt>
+                        <dd>CID {document.cid}</dd>
+                      </div>
+                      <div>
+                        <dt>Issued</dt>
+                        <dd>{new Date(document.issue_date).toLocaleDateString()}</dd>
+                      </div>
+                      <div>
+                        <dt>Fingerprint</dt>
+                        <dd>{shortHash(document.doc_hash)}</dd>
+                      </div>
+                      <div>
+                        <dt>Chain</dt>
+                        <dd>{document.tx_hash ? shortHash(document.tx_hash) : "Pending"}</dd>
+                      </div>
+                    </dl>
+
                     {result && (
-                      <div className={`status ${result.status === "VERIFIED" ? "ok" : "error"}`}>
-                        {result.status === "VERIFIED" && "The fingerprint matched an issued document."}
-                        {result.status === "REVOKED" && `Document revoked. ${result.revokedReason || ""}`}
-                        {result.status === "NOT_VERIFIED" && "This fingerprint was not verified on Yigda."}
+                      <div className="docCardActions" style={{ marginTop: 8 }}>
+                        <span className={`badge ${statusClass(result.status)} dot`}>{result.status}</span>
+                        {result.status === "VERIFIED" && (
+                          <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
+                            Fingerprint matched the issued record.
+                          </span>
+                        )}
+                        {result.status === "REVOKED" && (
+                          <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
+                            Revoked. {result.revokedReason || ""}
+                          </span>
+                        )}
+                        {result.status === "NOT_VERIFIED" && (
+                          <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
+                            Fingerprint not found on Yigda.
+                          </span>
+                        )}
                       </div>
                     )}
                   </article>
@@ -143,26 +200,29 @@ export default function SharedDocumentsPage() {
               })}
             </div>
 
-            <section className="panel" style={{ marginTop: 24, textAlign: "center" }}>
-              <p>
-                This will use <strong>{requiredCredits}</strong> verification credit
+            <section className="panel" style={{ marginTop: 28, textAlign: "center" }}>
+              <p style={{ color: "var(--ink-strong)", fontSize: "var(--text-md)" }}>
+                Verifying will use <strong>{requiredCredits}</strong> credit
                 {requiredCredits === 1 ? "" : "s"}.
               </p>
               {verificationInfo?.remainingCredits !== null && verificationInfo?.remainingCredits !== undefined && (
-                <p className="muted">Credits remaining before verification: {verificationInfo.remainingCredits}</p>
+                <p className="muted" style={{ marginTop: 4, fontSize: "var(--text-sm)" }}>
+                  Credits remaining before verification: {verificationInfo.remainingCredits}
+                </p>
               )}
-              <button
-                className="button"
-                disabled={busy || !documents.length || Boolean(verification)}
-                onClick={verifySharedDocuments}
-                style={{ marginTop: 16 }}
-              >
-                {busy ? "Verifying..." : "Click to Verify"}
-              </button>
+              <div className="buttonRow" style={{ justifyContent: "center", marginTop: 18 }}>
+                <button
+                  className="button"
+                  disabled={busy || !documents.length || Boolean(verification)}
+                  onClick={verifySharedDocuments}
+                  type="button"
+                >
+                  {busy ? "Verifying…" : verification ? "Verification complete" : "Verify documents"}
+                </button>
+              </div>
               {verification && (
                 <div className="status ok">
-                  {verification.creditsUsed} verification credit
-                  {verification.creditsUsed === 1 ? "" : "s"} used.
+                  {verification.creditsUsed} credit{verification.creditsUsed === 1 ? "" : "s"} used.
                   {verification.remainingCredits !== null && ` ${verification.remainingCredits} remaining.`}
                 </div>
               )}

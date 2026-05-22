@@ -9,6 +9,7 @@ export default function VaultPage() {
   const [user, setUser] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function VaultPage() {
       const data = await fetch("/api/documents/vault").then((response) => response.json());
       if (data.error) setError(data.error);
       setDocuments(data.documents || []);
+      setLoading(false);
     }
     load();
   }, [router]);
@@ -27,24 +29,55 @@ export default function VaultPage() {
     router.push(`/vault/share?docId=${document.id}`);
   }
 
+  const active = documents.filter((doc) => doc.status === "active").length;
+  const revoked = documents.filter((doc) => doc.status === "revoked").length;
+
   return (
     <>
       <Navbar />
       <main className="page">
         <div className="dashboardHeader">
           <div>
-            <h1>My Document Vault</h1>
-            <p className="muted">Documents issued to your NDI-verified CID.</p>
+            <span className="sectionEyebrow">Citizen vault</span>
+            <h1>My documents</h1>
+            <p>Documents issued by approved organizations to your NDI-verified CID.</p>
           </div>
-          {user && <span className="badge green">CID {user.cid}</span>}
+          <div className="dashboardMeta">
+            {user && (
+              <span className="badge green dot">
+                CID {user.cid}
+              </span>
+            )}
+            <span className="badge neutral">
+              {active} active{revoked ? ` · ${revoked} revoked` : ""}
+            </span>
+          </div>
         </div>
 
         {error && <div className="status error">{error}</div>}
-        {documents.length === 0 ? (
-          <section className="panel">
+
+        {loading ? (
+          <div className="grid three">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div className="panel" key={index} style={{ minHeight: 200 }}>
+                <span className="skeleton" style={{ height: 20, width: "65%" }} />
+                <span className="skeleton" style={{ height: 14, width: "45%", marginTop: 10 }} />
+                <span className="skeleton" style={{ height: 14, width: "55%", marginTop: 8 }} />
+                <span className="skeleton" style={{ height: 44, width: "100%", marginTop: 24 }} />
+              </div>
+            ))}
+          </div>
+        ) : documents.length === 0 ? (
+          <div className="empty">
+            <span className="emptyMark">
+              <img src="/images/yigda-seal.png" alt="" />
+            </span>
             <h2>No documents yet</h2>
-            <p>Issued documents will appear here after an approved organization sends one to your CID.</p>
-          </section>
+            <p>
+              Documents will appear here once an approved organization issues one to your CID. You'll be able to
+              download or share them from this vault.
+            </p>
+          </div>
         ) : (
           <div className="grid three">
             {documents.map((document) => (

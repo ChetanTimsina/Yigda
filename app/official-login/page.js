@@ -33,15 +33,19 @@ export default function OfficialLoginPage() {
 
   return (
     <main className="authShell">
-      <section className="panel authPanel">
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <span className="brandMark">Y</span>
+      <section className="authPanel">
+        <div className="authBrand">
+          <span className="brandMark">
+            <img src="/images/yigda-seal.png" alt="" />
+          </span>
+          <span className="brandWord">Yigda</span>
         </div>
-        <h1>Official Login</h1>
-        <p>For admin, approved organizations, and companies</p>
+        <h1>Official sign-in</h1>
+        <p>For administrators, approved organizations, and verifier companies.</p>
+
         <form className="form" onSubmit={submit}>
           <label className="label">
-            Username or organization/company name
+            Username or organization / company name
             <input
               className="input"
               value={form.username}
@@ -60,14 +64,16 @@ export default function OfficialLoginPage() {
               required
             />
           </label>
-          <button className="button" disabled={busy}>
-            {busy ? "Signing in..." : "Sign in"}
+          <button className="button full" disabled={busy}>
+            {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
+
         {error && <div className="status error">{error}</div>}
-        <p style={{ marginTop: 20 }}>
-          Organization or company? <Link href="/official-register">Register here</Link>
-        </p>
+
+        <div className="authFooter">
+          New to Yigda? <Link href="/official-register">Register an organization or company</Link>
+        </div>
       </section>
     </main>
   );

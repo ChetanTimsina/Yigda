@@ -74,37 +74,67 @@ export default function LoginPage() {
     <>
       <Navbar />
       <main className="page">
-        <section className="panel" style={{ maxWidth: 760, margin: "40px auto" }}>
-          <span className="badge green">{mode === "live" ? "Live NDI" : "Mock NDI"}</span>
-          <h1>Login with NDI</h1>
-          <p>Authenticate with Bhutan NDI to open your citizen document vault.</p>
+        <section className="panel" style={{ maxWidth: 820, margin: "32px auto" }}>
+          <div className="ndiHeader">
+            <span className="ndiBrandMark" aria-hidden="true">
+              <img src="/images/ndi-logo.png" alt="" />
+            </span>
+            <div>
+              <span className="badge green dot">{mode === "live" ? "Live NDI" : "Mock NDI"}</span>
+              <h1 className="ndiHeaderTitle">Sign in with Bhutan NDI</h1>
+              <p className="ndiHeaderLede">
+                Authenticate with your National Digital Identity wallet to open your citizen document vault.
+              </p>
+            </div>
+          </div>
 
           {!proof ? (
-            <button className="button" disabled={busy} onClick={startLogin} style={{ marginTop: 24 }}>
-              {busy ? "Preparing NDI login..." : "Create NDI QR Code"}
+            <button className="button" disabled={busy} onClick={startLogin} style={{ marginTop: 8 }}>
+              {busy ? "Preparing NDI login…" : "Create NDI QR Code"}
             </button>
           ) : (
-            <div className="grid two" style={{ alignItems: "center", marginTop: 24 }}>
-              <div style={{ textAlign: "center" }}>
-                <div className="qrFrame">
+            <div className="grid two" style={{ alignItems: "center", gap: 32, marginTop: 8 }}>
+              <div style={{ display: "grid", justifyItems: "center", gap: 14 }}>
+                <div className="qrFrame" style={{ position: "relative" }}>
                   <img src={proof.qrCodeDataUrl} alt="NDI proof request QR code" width="260" height="260" />
+                  <span style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    width: 48,
+                    height: 48,
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    border: "3px solid #fff",
+                    boxShadow: "0 1px 6px rgba(0,0,0,0.18)",
+                    display: "block",
+                    background: "oklch(20% 0.020 195)"
+                  }}>
+                    <img src="/images/ndi-logo.png" alt="NDI" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} />
+                  </span>
                 </div>
-                <p style={{ marginTop: 14 }}>
-                  <a className="button secondary" href={proof.deepLinkURL}>
-                    Open NDI Wallet
-                  </a>
-                </p>
+                <a className="button secondary" href={proof.deepLinkURL}>
+                  Open NDI Wallet
+                </a>
               </div>
               <div>
-                <h2>Complete in your wallet</h2>
-                <ol className="muted" style={{ lineHeight: 1.8 }}>
-                  <li>Open Bhutan NDI Wallet.</li>
-                  <li>Scan the QR code or open the wallet link.</li>
+                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.375rem", fontWeight: 500 }}>
+                  Complete in your wallet
+                </h2>
+                <ol className="muted" style={{ lineHeight: 1.85, marginTop: 12, paddingLeft: 18 }}>
+                  <li>Open the Bhutan NDI Wallet on your phone.</li>
+                  <li>Scan the QR code, or tap “Open NDI Wallet”.</li>
                   <li>Approve the requested identity proof.</li>
                   <li>Return here for automatic redirect.</li>
                 </ol>
                 {mode !== "live" && (
-                  <button className="button secondary" disabled={busy} onClick={() => fetchResult(proof)}>
+                  <button
+                    className="button secondary"
+                    disabled={busy}
+                    onClick={() => fetchResult(proof)}
+                    style={{ marginTop: 16 }}
+                  >
                     Fetch Mock Proof Result
                   </button>
                 )}

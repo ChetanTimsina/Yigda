@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import Chatbot from "@/components/Chatbot";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,6 +42,7 @@ export default function RootLayout({ children }) {
         }}
       >
         {children}
+        <Chatbot />
       </body>
     </html>
   );
